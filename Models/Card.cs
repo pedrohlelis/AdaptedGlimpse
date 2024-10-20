@@ -11,12 +11,12 @@ public class Card
     public string Name { get; set; }
     public string? Description { get; set; }
     public int Index { get; set; }
-    public DateOnly? StartDate { get; set; }
+    public DateTime? StartDate { get; set; }
     public DateTime? DueDate { get; set; }
     public DateTime? FinishedAt { get; set; }
     public virtual Lane? Lane { get; set; }
     public virtual User? User { get; set; }
-    public int ResponsibleSuperiorId {get; set; }
+    public int ResponsibleSuperiorId { get; set; }
     [JsonIgnore]
     public virtual ICollection<Tag> Tags { get; } = [];
     public virtual ICollection<Checkbox> Checkboxes { get; } = [];

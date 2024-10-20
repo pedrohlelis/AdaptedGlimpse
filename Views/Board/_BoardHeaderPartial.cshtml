@@ -33,15 +33,19 @@
       </button>
     </div>
     <div class="align-content-center align-items-center"><div class="vertical-separator px-1 "></div></div>
-    <button id="add-lane-button" class="fs-6 new-lane-btn text-white">
-      <span class="d-flex">
-        <box-icon class="pe-2" size="22px" name='right-arrow-circle' color='#d8d8d8' ></box-icon>
-        <span class="new-lane">Nova Raia</span>
-      </span>
-    </button>
+    
     @if(@Model.IsQualityAssuranceType != null && @Model.IsQualityAssuranceType == true)
     {
       <div class="align-content-center d-flex pe-3 mt-3 mx-5" style="font-size: 16px; color: white;" id="porcentagem-aderencia">Porcentagem de aderência: 0%</div>
+    }
+    else 
+    {
+      <button id="add-lane-button" class="fs-6 new-lane-btn text-white">
+        <span class="d-flex">
+          <box-icon class="pe-2" size="22px" name='right-arrow-circle' color='#d8d8d8' ></box-icon>
+          <span class="new-lane">Nova Raia</span>
+        </span>
+      </button>
     }
   </div>
   

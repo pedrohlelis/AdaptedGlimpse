@@ -408,7 +408,6 @@ lanes.forEach((lane) => {
             const cardId = card.dataset.id;
             const cardName = card.dataset.name;
             const cardDescription = card.dataset.description;
-            const cardStartDate = new Date(card.dataset.startdate);
             
             let cardTags = card.dataset.tags;
             let cardUser = card.dataset.user;
@@ -438,34 +437,8 @@ lanes.forEach((lane) => {
             document.getElementById('deleteCardId').value = cardId;
             document.getElementById('description').value = cardDescription;
 
-            // const [dueDay, dueMonth, dueYearTime] = cardDueDate.split('/');
-            // const [dueYear, dueTime] = dueYearTime.split(' ');
-            // const [dueHour, dueMinute] = dueTime.split(':');
-
-            // const [finishedDay, finishedMonth, finishedYearTime] = cardFinishedAt.split('/');
-            // const [finishedYear, finishedTime] = finishedYearTime.split(' ');
-            // const [finishedHour, finishedMinute] = finishedTime.split(':');
-
-            // // Format the date into a compatible format for Date objects
-            // const formattedDueDateTime = `${dueYear}-${dueMonth}-${dueDay}T${dueHour}:${dueMinute}`;
-            // const formattedFinishedDateTime = `${finishedYear}-${finishedMonth}-${finishedDay}T${finishedHour}:${finishedMinute}`;
-
-            // // Create JavaScript Date objects
-            // const dueDateTimeObject = new Date(formattedDueDateTime);
-            // const finishedAtObject = new Date(formattedFinishedDateTime);
-
-            // // Assign the values to the input fields (if needed)
-            // document.getElementById('dueDate').value = formattedDueDateTime;
-            // document.getElementById('finishedAt').value = formattedFinishedDateTime;
-
-            // // Compare finishedAt and dueDate
-            // if (finishedAtObject <= dueDateTimeObject) {
-            //     document.getElementById('finishedAt').style.backgroundColor = '#23782e'; // On time or early
-            // } else {
-            //     document.getElementById('finishedAt').style.backgroundColor = '#8a1c2e'; // Late
-            // }
-
 // Parse and convert to YYYY-MM-DDTHH:MM format
+            const cardStartDateStr = card.dataset.startdate;
             const cardDueDateStr = card.dataset.duedate; // e.g., "20/10/2024 11:56"
             const cardFinishedAtStr = card.dataset.finishedat;
 
@@ -480,6 +453,7 @@ lanes.forEach((lane) => {
             const cardFinishedAt = new Date(parseDateTime(cardFinishedAtStr));
 
             // Assign the formatted values to the datetime-local input fields
+            document.getElementById('startDate').value = parseDateTime(cardStartDateStr);
             document.getElementById('dueDate').value = parseDateTime(cardDueDateStr); // Assign formatted string
             document.getElementById('finishedAt').value = parseDateTime(cardFinishedAtStr); // Assign formatted string
 
@@ -792,19 +766,22 @@ function isDarkColor(color) {
 
     return luminance < 0.5;
 }
-
 const addLaneButton = document.querySelector('.new-lane-btn');
-const laneForm = document.querySelector('.create-lane-form');
-const laneInput = document.querySelector('.lane-input');
-const cardForms = document.querySelectorAll('.create-card-form');
+if(addLaneButton){
+    const laneForm = document.querySelector('.create-lane-form');
+    const laneInput = document.querySelector('.lane-input');
 
-addLaneButton.addEventListener('click', function(event) {
+    addLaneButton.addEventListener('click', function(event) {
     event.stopPropagation();
     laneForm.removeAttribute('hidden');
     laneInput.focus();
-});
+    });
 
-laneInput.setAttribute('autocomplete', 'off');
+    laneInput.setAttribute('autocomplete', 'off');
+}
+
+const cardForms = document.querySelectorAll('.create-card-form');
+
 
 document.addEventListener('click', function(event) {
     cardForms.forEach((form) => {
@@ -812,10 +789,12 @@ document.addEventListener('click', function(event) {
             form.setAttribute('hidden', true);
         }
     });
-
-    if (!event.target.closest('.create-lane-form') && !event.target.closest('.new-lane-btn')) {
-        laneForm.setAttribute('hidden', true);
+    if(addLaneButton){
+        if (!event.target.closest('.create-lane-form') && !event.target.closest('.new-lane-btn')) {
+            laneForm.setAttribute('hidden', true);
+        }
     }
+
 });
 
     const addCardButtons = document.querySelectorAll('.add-card-button');

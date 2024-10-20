@@ -73,7 +73,7 @@
                 data-id="@card.Id"
                 data-name="@card.Name"
                 data-description="@card.Description"
-                data-startdate="@card.StartDate?.ToString("dd/MM/yyyy")"
+                data-startdate="@card.StartDate?.ToString("dd/MM/yyyy HH:mm")"
                 data-duedate="@card.DueDate?.ToString("dd/MM/yyyy HH:mm")"
                 data-finishedat="@card.FinishedAt?.ToString("dd/MM/yyyy HH:mm")"
                 data-tags='@tagsJson'
@@ -177,7 +177,7 @@
                 data-id="@card.Id"
                 data-name="@card.Name"
                 data-description="@card.Description"
-                data-startdate="@card.StartDate?.ToString("dd/MM/yyyy")"
+                data-startdate="@card.StartDate?.ToString("dd/MM/yyyy HH:mm")"
                 data-duedate="@card.DueDate?.ToString("dd/MM/yyyy HH:mm")"
                 data-finishedat="@card.FinishedAt?.ToString("dd/MM/yyyy HH:mm")"
                 data-tags='@tagsJson'
@@ -281,13 +281,14 @@
                 data-id="@card.Id"
                 data-name="@card.Name"
                 data-description="@card.Description"
-                data-startdate="@card.StartDate?.ToString("dd/MM/yyyy")"
+                data-startdate="@card.StartDate?.ToString("dd/MM/yyyy HH:mm")"
                 data-duedate="@card.DueDate?.ToString("dd/MM/yyyy HH:mm")"
                 data-finishedat="@card.FinishedAt?.ToString("dd/MM/yyyy HH:mm")"
                 data-tags='@tagsJson'
                 data-user='@userJson'
                 data-checkboxes='@checkboxesJson'
                 draggable="true">
+
                 <div class="tags-container d-flex flex-wrap">
                     @foreach(Tag tag in card.Tags)
                     {

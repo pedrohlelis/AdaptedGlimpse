@@ -48,7 +48,7 @@ public class CardController : Controller
         var card = new Card
         {
             Name = name,
-            StartDate = DateOnly.FromDateTime(DateTime.Now),
+            StartDate = DateTime.Now,
             DueDate = DateTime.Now,
             Lane = await _db.Lanes.FirstOrDefaultAsync(x => x.Id == laneId)
         };
@@ -66,7 +66,7 @@ public class CardController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> EditCard(int cardId, string? name, string? description, DateOnly? startDate, DateTime? dueDate, DateTime? FineshedAt, int id, bool IsMemberSideBarActive)
+    public async Task<IActionResult> EditCard(int cardId, string? name, string? description, DateTime? startDate, DateTime? dueDate, DateTime? finishedAt, int id, bool IsMemberSideBarActive)
     {
         var card = await _db.Cards.FindAsync(cardId);
 
@@ -74,7 +74,7 @@ public class CardController : Controller
         card.Description = description;
         card.StartDate = startDate;
         card.DueDate = dueDate;
-        card.FinishedAt = FineshedAt;
+        card.FinishedAt = finishedAt;
         await _db.SaveChangesAsync();
 
         await _db.SaveChangesAsync();

@@ -48,12 +48,12 @@ public class ProjectController : Controller
             Projects = user.Projects,
             ActiveProjects = activeUserProjects
         };
-        
+
         ViewData["UserName"] = user.FirstName + " " + user.LastName;
 
         return View(model);
     }
-    public async Task<IActionResult> Dashboard(int projectId) 
+    public async Task<IActionResult> Dashboard(int projectId)
     {
         return View();
     }
@@ -83,7 +83,8 @@ public class ProjectController : Controller
                 await projectImg.CopyToAsync(stream);
             }
             project.Picture = "../project-pictures/" + nomeArquivo;
-        } else 
+        }
+        else
         {
             project.Picture = "../default-images/ProjectDefault.svg";
         }
@@ -93,7 +94,7 @@ public class ProjectController : Controller
             _db.Projects.AddAsync(project);
             await _db.SaveChangesAsync();
 
-            var DefaultBoard = new Board 
+            var DefaultBoard = new Board
             {
                 Name = "Quadro",
                 CreationDate = DateOnly.FromDateTime(DateTime.UtcNow),
@@ -122,6 +123,10 @@ public class ProjectController : Controller
             DefaultBoard.Lanes.Add(BacklogLane);
             DefaultBoard.Lanes.Add(ToDoLane);
             DefaultBoard.Lanes.Add(DoneLane);
+
+            DefaultBoard.QAChecklist = 0;
+            DefaultBoard.QAConformities = 0;
+            DefaultBoard.QAUnconformities = 0;
             project.Boards.Add(DefaultBoard);
 
             var DefaultPORole = new Role
@@ -164,7 +169,7 @@ public class ProjectController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> LeaveProject(int projectToLeaveId) 
+    public async Task<IActionResult> LeaveProject(int projectToLeaveId)
     {
         var currentUser = await _userManager.GetUserAsync(User);
 
@@ -208,10 +213,11 @@ public class ProjectController : Controller
         Project Project = await _db.Projects.FindAsync(id);
         var currentUser = await _userManager.GetUserAsync(User);
 
-        if (currentUser.Id != Project.ResponsibleUserId){
+        if (currentUser.Id != Project.ResponsibleUserId)
+        {
             return Forbid();
         }
-        
+
         if (Project == null)
         {
             return NotFound();
@@ -317,7 +323,8 @@ public class ProjectController : Controller
             return NotFound("Email digitado não pertence a nenhum usuário");
         }
 
-        if (project.Users.Contains(user)){
+        if (project.Users.Contains(user))
+        {
             return RedirectToAction("GetBoardInfo", "Board", new { id, IsMemberSideBarActive = true });
         }
 
@@ -325,7 +332,7 @@ public class ProjectController : Controller
         user.Projects.Add(project);
         await _db.SaveChangesAsync();
 
-        return RedirectToAction("GetBoardInfo", "Board", new {id, IsMemberSideBarActive = true });
+        return RedirectToAction("GetBoardInfo", "Board", new { id, IsMemberSideBarActive = true });
     }
 
 }

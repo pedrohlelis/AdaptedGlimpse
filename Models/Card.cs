@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Glimpse.Models;
 
-public class Card 
+public class Card
 {
     [Key]
     public int Id { get; set; }
@@ -13,8 +13,10 @@ public class Card
     public int Index { get; set; }
     public DateOnly? StartDate { get; set; }
     public DateTime? DueDate { get; set; }
+    public DateTime? FinishedAt { get; set; }
     public virtual Lane? Lane { get; set; }
     public virtual User? User { get; set; }
+    public int ResponsibleSuperiorId {get; set; }
     [JsonIgnore]
     public virtual ICollection<Tag> Tags { get; } = [];
     public virtual ICollection<Checkbox> Checkboxes { get; } = [];

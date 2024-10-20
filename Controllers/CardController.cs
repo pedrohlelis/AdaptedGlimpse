@@ -66,7 +66,7 @@ public class CardController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> EditCard(int cardId, string? name, string? description, DateOnly? startDate, DateTime? dueDate, int id, bool IsMemberSideBarActive)
+    public async Task<IActionResult> EditCard(int cardId, string? name, string? description, DateOnly? startDate, DateTime? dueDate, DateTime? FineshedAt, int id, bool IsMemberSideBarActive)
     {
         var card = await _db.Cards.FindAsync(cardId);
 
@@ -74,6 +74,7 @@ public class CardController : Controller
         card.Description = description;
         card.StartDate = startDate;
         card.DueDate = dueDate;
+        card.FinishedAt = FineshedAt;
         await _db.SaveChangesAsync();
 
         await _db.SaveChangesAsync();
@@ -191,7 +192,8 @@ public class CardController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> AddUserToCard(int userCardId, int boardId, string userId) {
+    public async Task<IActionResult> AddUserToCard(int userCardId, int boardId, string userId)
+    {
         Card card = await _db.Cards.FindAsync(userCardId);
         var user = _db.Users
             .Include(u => u.Cards)
@@ -209,7 +211,8 @@ public class CardController : Controller
         return RedirectToAction("GetBoardInfo", "Board", new { id = boardId });
     }
     [HttpPost]
-    public async Task<IActionResult> RemoveUserFromCard(int userCardId, int boardId) {
+    public async Task<IActionResult> RemoveUserFromCard(int userCardId, int boardId)
+    {
         var card = await _db.Cards
             .Include(c => c.User)
             .SingleOrDefaultAsync(u => u.Id == userCardId);

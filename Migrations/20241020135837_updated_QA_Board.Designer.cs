@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Glimpse.Migrations
 {
     [DbContext(typeof(GlimpseContext))]
-    [Migration("20240703005819_CreateDatabase")]
-    partial class CreateDatabase
+    [Migration("20241020135837_updated_QA_Board")]
+    partial class updated_QA_Board
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -60,12 +60,27 @@ namespace Glimpse.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsQualityAssuranceType")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<int?>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QAChecklist")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QAConformities")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QANonApplicable")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QAUnconformities")
                         .HasColumnType("int");
 
                     b.HasKey("Id");

@@ -57,12 +57,27 @@ namespace Glimpse.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsQualityAssuranceType")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<int?>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QAChecklist")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QAConformities")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QANonApplicable")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QAUnconformities")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -86,6 +101,9 @@ namespace Glimpse.Migrations
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("FinishedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("Index")
                         .HasColumnType("int");
 
@@ -95,6 +113,9 @@ namespace Glimpse.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ResponsibleSuperiorId")
+                        .HasColumnType("int");
 
                     b.Property<DateOnly?>("StartDate")
                         .HasColumnType("date");

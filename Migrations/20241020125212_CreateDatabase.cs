@@ -189,8 +189,12 @@ namespace Glimpse.Migrations
                     Background = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreationDate = table.Column<DateOnly>(type: "date", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsQualityAssuranceType = table.Column<bool>(type: "bit", nullable: false),
                     CreatorId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ProjectId = table.Column<int>(type: "int", nullable: true)
+                    ProjectId = table.Column<int>(type: "int", nullable: true),
+                    QAChecklist = table.Column<int>(type: "int", nullable: true),
+                    QAConformities = table.Column<int>(type: "int", nullable: true),
+                    QAUnconformities = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {

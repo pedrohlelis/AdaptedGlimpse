@@ -131,6 +131,18 @@ if (toggleMemberBarDiv != null)
 document.addEventListener('DOMContentLoaded', function() {
     // CARDS AND LANES DRAG&DROP
     const board = document.querySelector(".lanes");
+    const element = document.getElementById('porcentagem-aderencia');
+
+    if (element) {
+        const qaChecklist = document.getElementById('QAChecklist').querySelectorAll('.task').length;
+        const qaConformities = document.getElementById('QAConformities').querySelectorAll('.task').length;
+        const qaUnconformities = document.getElementById('QAUnconformities').querySelectorAll('.task').length;
+
+        const totalTasks = qaChecklist + qaConformities + qaUnconformities;
+        let percentage = totalTasks > 0 ? (qaConformities / totalTasks) * 100 : 0;
+        percentage = percentage.toFixed(2);
+        element.innerHTML = `Porcentagem de aderência: ${percentage}%`;
+    }
 
     const saveCardOrderForm = document.querySelector('.save-card-order-form');
     const cardOrderInput = saveCardOrderForm.querySelector('input[name="taskIndexDictionary"]');
@@ -396,8 +408,7 @@ lanes.forEach((lane) => {
             const cardId = card.dataset.id;
             const cardName = card.dataset.name;
             const cardDescription = card.dataset.description;
-            const cardStartDate = card.dataset.startdate;
-            const cardDueDate = card.dataset.duedate;
+            const cardStartDate = new Date(card.dataset.startdate);
             
             let cardTags = card.dataset.tags;
             let cardUser = card.dataset.user;
@@ -419,18 +430,6 @@ lanes.forEach((lane) => {
                 cardCheckboxes = [];
             }
 
-            const [day, month, year] = cardStartDate.split('/');
-
-            const [dueDay, dueMonth, dueYearTime] = cardDueDate.split('/');
-            const [dueYear, time] = dueYearTime.split(' ');
-            const [hour, minute] = time.split(':');
-
-            const formattedStartDate = `${year}-${month}-${day}`;
-            const formattedDueDateTime = `${dueYear}-${dueMonth}-${dueDay}T${hour}:${minute}`;
-
-            const startDateObject = new Date(formattedStartDate);
-            const dueDateTimeObject = new Date(formattedDueDateTime);
-
 
             document.getElementById('cardId').value = cardId;
             document.getElementById('tagCardId').value = cardId;
@@ -439,15 +438,57 @@ lanes.forEach((lane) => {
             document.getElementById('deleteCardId').value = cardId;
             document.getElementById('description').value = cardDescription;
 
-            document.getElementById('startDate').valueAsDate = startDateObject;
+            // const [dueDay, dueMonth, dueYearTime] = cardDueDate.split('/');
+            // const [dueYear, dueTime] = dueYearTime.split(' ');
+            // const [dueHour, dueMinute] = dueTime.split(':');
 
-            document.getElementById('dueDate').value = formattedDueDateTime;
-            if (dueDateTimeObject <= Date.now()) {
-                document.getElementById('dueDate').style.backgroundColor = '#8a1c2e';
-            } else {
-                document.getElementById('dueDate').style.backgroundColor = '#23782e';
+            // const [finishedDay, finishedMonth, finishedYearTime] = cardFinishedAt.split('/');
+            // const [finishedYear, finishedTime] = finishedYearTime.split(' ');
+            // const [finishedHour, finishedMinute] = finishedTime.split(':');
+
+            // // Format the date into a compatible format for Date objects
+            // const formattedDueDateTime = `${dueYear}-${dueMonth}-${dueDay}T${dueHour}:${dueMinute}`;
+            // const formattedFinishedDateTime = `${finishedYear}-${finishedMonth}-${finishedDay}T${finishedHour}:${finishedMinute}`;
+
+            // // Create JavaScript Date objects
+            // const dueDateTimeObject = new Date(formattedDueDateTime);
+            // const finishedAtObject = new Date(formattedFinishedDateTime);
+
+            // // Assign the values to the input fields (if needed)
+            // document.getElementById('dueDate').value = formattedDueDateTime;
+            // document.getElementById('finishedAt').value = formattedFinishedDateTime;
+
+            // // Compare finishedAt and dueDate
+            // if (finishedAtObject <= dueDateTimeObject) {
+            //     document.getElementById('finishedAt').style.backgroundColor = '#23782e'; // On time or early
+            // } else {
+            //     document.getElementById('finishedAt').style.backgroundColor = '#8a1c2e'; // Late
+            // }
+
+// Parse and convert to YYYY-MM-DDTHH:MM format
+            const cardDueDateStr = card.dataset.duedate; // e.g., "20/10/2024 11:56"
+            const cardFinishedAtStr = card.dataset.finishedat;
+
+            function parseDateTime(dateTimeStr) {
+                const [datePart, timePart] = dateTimeStr.split(' '); // Split into date and time
+                const [day, month, year] = datePart.split('/'); // Split date into day, month, year
+                return `${year}-${month}-${day}T${timePart}`; // Rearrange to YYYY-MM-DDTHH:MM
             }
 
+            // Convert to Date objects
+            const cardDueDate = new Date(parseDateTime(cardDueDateStr));
+            const cardFinishedAt = new Date(parseDateTime(cardFinishedAtStr));
+
+            // Assign the formatted values to the datetime-local input fields
+            document.getElementById('dueDate').value = parseDateTime(cardDueDateStr); // Assign formatted string
+            document.getElementById('finishedAt').value = parseDateTime(cardFinishedAtStr); // Assign formatted string
+
+            // Compare finishedAt and dueDate
+            if (cardFinishedAt <= cardDueDate) {
+                document.getElementById('finishedAt').style.backgroundColor = '#23782e'; // On time or early
+            } else {
+                document.getElementById('finishedAt').style.backgroundColor = '#8a1c2e'; // Late
+            }
             const tagsContainer = document.getElementById('tags');
             tagsContainer.innerHTML = '';
             cardTags.forEach(tag => {
@@ -666,6 +707,7 @@ lanes.forEach((lane) => {
                     }
                 }, 10);
             }
+
 
             const userContainer = document.getElementById('user');
             userContainer.style.marginTop = '5%';

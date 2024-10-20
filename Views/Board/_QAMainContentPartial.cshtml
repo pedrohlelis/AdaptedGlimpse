@@ -1,0 +1,522 @@
+@using Glimpse.ViewModels;
+@using System.Text.Json;
+@model BoardVM;
+
+<input name="IsMemberSideBarActive" type="hidden">
+<br>
+
+
+
+<div class="lanes text-white">
+    <div>
+        <form id="create-lane-form" class="create-lane-form" asp-action="CreateLane" asp-controller="Lane" method="post" hidden>
+            <div style="width: 300px; height: 200px;" class="lane">
+                <div class="d-flex align-content-center align-items-center px-1">
+                    <input name="name" class="text-white lane-input" placeholder="Nome da raia" type="text" autocomplete="off" style="outline: none; border: none;">
+                    <input name="id" value="@Model.Board.Id" type="hidden">
+                    <input type="hidden" name="IsMemberSideBarActive" class="IsMemberSideBarActiveInput">
+                </div>
+                <br>
+                <hr>
+            </div>
+        </form>
+    </div>
+
+        <div class="swim-lane mx-1 col bg-dark" style="min-width: 350px;" id="QAChecklist" data-id="@Model.QAChecklist.Id">
+            
+                <div class="d-flex justify-content-between me-2">
+                    <p style="font-family: Fixture-Expanded-SemiBold; font-size: 1.5rem; margin: 0;">@Model.QAChecklist.Name</p>
+                    <span class="badge bg-secondary text-white me-2 d-flex justify-content-center align-items-center" style="font-size: 1.2rem; width: auto;">@Model.QAChecklist.Cards.Count</span>
+                </div>
+            
+            <hr>
+        @if ((Model.UserRole != null && Model.UserRole.CanManageCards) || Model.User == Model.ProjectResponsibleUser) {
+            <div class="col d-flex task-btn">
+                <a class="w-100 align-items-center add-card-link">
+                    <button class="button-create add-card-button" style="text-transform: none;">
+                        <div class="d-flex justify-content-center">
+                            <img class="px-1" src="/Icons/plusIcon.svg">  
+                            <p class="px-1 m-0" style="font-family: Fixture-Expanded-Light;">Novo Item</p>
+                        </div>
+                    </button>
+                </a>
+            </div>
+        }
+        <form class="create-card-form" asp-action="CreateCard" asp-controller="Card" method="post" hidden>
+            <input name="name" class="w-100 ps-3 py-3 border-3 border-primary text-white card-input" style="background-color: #1E1E1E; border-radius: 13px; outline: none;" placeholder="Nome do cartão" type="text">
+            <input name="laneId" value="@Model.QAChecklist.Id" type="hidden">
+            <input name="id" value="@Model.Board.Id" type="hidden">
+            <input type="hidden" name="IsMemberSideBarActive" class="IsMemberSideBarActiveInput">
+        </form>
+
+        <form class="save-card-order-form" asp-action="SaveCardOrder" asp-controller="Card" method="post" hidden>
+            <input type="text" name="taskIndexDictionary">
+            <input name="id" value="@Model.Board.Id" type="hidden">
+            <input type="hidden" name="IsMemberSideBarActive" class="IsMemberSideBarActiveInput">
+        </form>
+
+        <form class="save-lane-order-form" asp-action="SaveLaneOrder" asp-controller="Lane" method="post" hidden>
+            <input type="text" name="laneIndexDictionary">
+            <input name="id" value="@Model.Board.Id" type="hidden">
+            <input type="hidden" name="IsMemberSideBarActive" class="IsMemberSideBarActiveInput">
+        </form>
+
+        @foreach (Card card in Model.QAChecklist.Cards.OrderBy(card => card.Index))
+        {
+            var tagsJson = JsonSerializer.Serialize(card.Tags.Select(tag => new { tag.Name, tag.Color }));
+            var checkboxesJson = JsonSerializer.Serialize(card.Checkboxes.Select( checkbox => new { checkbox.Id, checkbox.Finished, checkbox.Name }));
+            var userJson = card.User != null ? JsonSerializer.Serialize(new { card.User.FirstName, card.User.LastName, card.User.Picture }) : "null";
+
+            <div class="task row py-3 px-2 border-3" 
+                style="background-color: #1E1E1E; border-radius: 13px; cursor: pointer; border-bottom: 2px solid #6600eb"
+                data-boardid="@Model.Board.Id"
+                data-id="@card.Id"
+                data-name="@card.Name"
+                data-description="@card.Description"
+                data-startdate="@card.StartDate?.ToString("dd/MM/yyyy")"
+                data-duedate="@card.DueDate?.ToString("dd/MM/yyyy HH:mm")"
+                data-finishedat="@card.FinishedAt?.ToString("dd/MM/yyyy HH:mm")"
+                data-tags='@tagsJson'
+                data-user='@userJson'
+                data-checkboxes='@checkboxesJson'
+                draggable="true">
+                <div class="tags-container d-flex flex-wrap">
+                    @foreach(Tag tag in card.Tags)
+                    {
+                        <span class="badge" style="background-color: @tag.Color;">@tag.Name</span>
+                    }
+                </div>
+                <a class="text-white mb-2" style="font-size: 14px; text-decoration: none; cursor: pointer;">@card.Name</a>
+                @if(card.User != null)
+                {
+                    <div class="d-flex align-content-center pt-2 mb-3 justify-content-between" style="text-wrap: nowrap; overflow: hidden;">
+                        <div class="d-flex align-content-center">
+                            <img class="mx-1" src="@(card.User.Picture ?? Url.Content("~/default-images/default-avatar.jpg"))"
+                            width="30px"
+                            height="30px"
+                            style="border: 2px solid @(Model.UserRolesDictionary[card.User]?.Color ?? "#fff"); border-radius: 50%;">
+                            <p class="px-1 m-0 align-content-center" style="overflow: hidden; text-overflow: ellipsis; color: @(Model.UserRolesDictionary[card.User]?.Color ?? "#fff");">@card.User.FirstName @card.User.LastName</p>
+                        </div>
+                    </div>
+                    @if(card.StartDate != null && card.DueDate != null){
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center justify-content-start" style="background-color: #1a1a1a00; border-radius: 2px; padding: 5px 10px; color: #797979; max-width:140px; max-height:30px;">
+                                    <box-icon name='time-five' color="#797979"></box-icon>
+                                    <span class="px-1" style="font-size: 11px;">@String.Format("{0:dd 'de' MMM} - {1:dd 'de' MMM}", card.StartDate, card.DueDate)</span>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-start" style="max-width: 100px;">
+                                    @{
+                                        int checkedboxes = 0;
+                                        foreach(Checkbox checkbox in card.Checkboxes){
+                                            if(checkbox.Finished){
+                                                checkedboxes += 1;
+                                            }
+                                        }
+                                    }
+                                    <box-icon name='checkbox-checked' color="#797979" ></box-icon>
+                                    <span class="checkbox-count" style="font-size: 12px; color:#797979; width:100%;">
+                                        @checkedboxes/@card.Checkboxes.Count
+                                    </span>
+                                </div>
+                            </div>
+                        }
+                } else
+                {
+                    @if(card.StartDate != null && card.DueDate != null){
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center justify-content-start" style="background-color: #1a1a1a00; border-radius: 2px; padding: 5px 10px; color: #797979; max-width:140px; max-height:30px;">
+                                <box-icon name='time-five' color="#797979"></box-icon>
+                                <span class="px-1" style="font-size: 11px;">@String.Format("{0:dd 'de' MMM} - {1:dd 'de' MMM}", card.StartDate, card.DueDate)</span>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-start" style="max-width: 100px;">
+                                @{
+                                    int checkedboxes = 0;
+                                    foreach(Checkbox checkbox in card.Checkboxes){
+                                        if(checkbox.Finished){
+                                            checkedboxes += 1;
+                                        }
+                                    }
+                                }
+                                <box-icon name='checkbox-checked' color="#797979"></box-icon>
+                                <span class="checkbox-count" style="font-size: 12px; color:#797979; width:100%;">
+                                    @checkedboxes/@card.Checkboxes.Count
+                                </span>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        }
+    </div>
+
+
+    <div class="swim-lane mx-1 col bg-dark" style="min-width: 350px;" id="QAConformities" data-id="@Model.QAConformities.Id">
+            
+                <div class="d-flex justify-content-between me-2">
+                    <p style="font-family: Fixture-Expanded-SemiBold; font-size: 1.5rem; margin: 0;">@Model.QAConformities.Name</p>
+                    <span class="badge bg-secondary text-white me-2 d-flex justify-content-center align-items-center" style="font-size: 1.2rem; width: auto;">@Model.QAConformities.Cards.Count</span>
+                </div>
+            
+            <hr>
+
+        <form class="save-card-order-form" asp-action="SaveCardOrder" asp-controller="Card" method="post" hidden>
+            <input type="text" name="taskIndexDictionary">
+            <input name="id" value="@Model.Board.Id" type="hidden">
+            <input type="hidden" name="IsMemberSideBarActive" class="IsMemberSideBarActiveInput">
+        </form>
+
+        @foreach (Card card in Model.QAConformities.Cards.OrderBy(card => card.Index))
+        {
+            var tagsJson = JsonSerializer.Serialize(card.Tags.Select(tag => new { tag.Name, tag.Color }));
+            var checkboxesJson = JsonSerializer.Serialize(card.Checkboxes.Select( checkbox => new { checkbox.Id, checkbox.Finished, checkbox.Name }));
+            var userJson = card.User != null ? JsonSerializer.Serialize(new { card.User.FirstName, card.User.LastName, card.User.Picture }) : "null";
+
+            <div class="task row py-3 px-2 border-3" 
+                style="background-color: #1E1E1E; border-radius: 13px; cursor: pointer; border-bottom: 2px solid #3BE73B;"
+                data-boardid="@Model.Board.Id"
+                data-id="@card.Id"
+                data-name="@card.Name"
+                data-description="@card.Description"
+                data-startdate="@card.StartDate?.ToString("dd/MM/yyyy")"
+                data-duedate="@card.DueDate?.ToString("dd/MM/yyyy HH:mm")"
+                data-finishedat="@card.FinishedAt?.ToString("dd/MM/yyyy HH:mm")"
+                data-tags='@tagsJson'
+                data-user='@userJson'
+                data-checkboxes='@checkboxesJson'
+                draggable="true">
+                <div class="tags-container d-flex flex-wrap">
+                    @foreach(Tag tag in card.Tags)
+                    {
+                        <span class="badge" style="background-color: @tag.Color;">@tag.Name</span>
+                    }
+                </div>
+                <a class="text-white mb-2" style="font-size: 14px; text-decoration: none; cursor: pointer;">@card.Name</a>
+                @if(card.User != null)
+                {
+                    <div class="d-flex align-content-center pt-2 mb-3 justify-content-between" style="text-wrap: nowrap; overflow: hidden;">
+                        <div class="d-flex align-content-center">
+                            <img class="mx-1" src="@(card.User.Picture ?? Url.Content("~/default-images/default-avatar.jpg"))"
+                            width="30px"
+                            height="30px"
+                            style="border: 2px solid @(Model.UserRolesDictionary[card.User]?.Color ?? "#fff"); border-radius: 50%;">
+                            <p class="px-1 m-0 align-content-center" style="overflow: hidden; text-overflow: ellipsis; color: @(Model.UserRolesDictionary[card.User]?.Color ?? "#fff");">@card.User.FirstName @card.User.LastName</p>
+                        </div>
+                    </div>
+                    @if(card.StartDate != null && card.DueDate != null){
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center justify-content-start" style="background-color: #1a1a1a00; border-radius: 2px; padding: 5px 10px; color: #797979; max-width:140px; max-height:30px;">
+                                    <box-icon name='time-five' color="#797979"></box-icon>
+                                    <span class="px-1" style="font-size: 11px;">@String.Format("{0:dd 'de' MMM} - {1:dd 'de' MMM}", card.StartDate, card.DueDate)</span>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-start" style="max-width: 100px;">
+                                    @{
+                                        int checkedboxes = 0;
+                                        foreach(Checkbox checkbox in card.Checkboxes){
+                                            if(checkbox.Finished){
+                                                checkedboxes += 1;
+                                            }
+                                        }
+                                    }
+                                    <box-icon name='checkbox-checked' color="#797979" ></box-icon>
+                                    <span class="checkbox-count" style="font-size: 12px; color:#797979; width:100%;">
+                                        @checkedboxes/@card.Checkboxes.Count
+                                    </span>
+                                </div>
+                            </div>
+                        }
+                } else
+                {
+                    @if(card.StartDate != null && card.DueDate != null){
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center justify-content-start" style="background-color: #1a1a1a00; border-radius: 2px; padding: 5px 10px; color: #797979; max-width:140px; max-height:30px;">
+                                <box-icon name='time-five' color="#797979"></box-icon>
+                                <span class="px-1" style="font-size: 11px;">@String.Format("{0:dd 'de' MMM} - {1:dd 'de' MMM}", card.StartDate, card.DueDate)</span>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-start" style="max-width: 100px;">
+                                @{
+                                    int checkedboxes = 0;
+                                    foreach(Checkbox checkbox in card.Checkboxes){
+                                        if(checkbox.Finished){
+                                            checkedboxes += 1;
+                                        }
+                                    }
+                                }
+                                <box-icon name='checkbox-checked' color="#797979"></box-icon>
+                                <span class="checkbox-count" style="font-size: 12px; color:#797979; width:100%;">
+                                    @checkedboxes/@card.Checkboxes.Count
+                                </span>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        }
+    </div>
+
+
+    <div class="swim-lane mx-1 col bg-dark" style="min-width: 350px;" id="QAUnconformities" data-id="@Model.QAUnconformities.Id">
+            
+                <div class="d-flex justify-content-between me-2">
+                    <p style="font-family: Fixture-Expanded-SemiBold; font-size: 1.5rem; margin: 0;">@Model.QAUnconformities.Name</p>
+                    <span class="badge bg-secondary text-white me-2 d-flex justify-content-center align-items-center" style="font-size: 1.2rem; width: auto;">@Model.QAUnconformities.Cards.Count</span>
+                </div>
+            
+            <hr>
+
+        <form class="save-card-order-form" asp-action="SaveCardOrder" asp-controller="Card" method="post" hidden>
+            <input type="text" name="taskIndexDictionary">
+            <input name="id" value="@Model.Board.Id" type="hidden">
+            <input type="hidden" name="IsMemberSideBarActive" class="IsMemberSideBarActiveInput">
+        </form>
+
+        @foreach (Card card in Model.QAUnconformities.Cards.OrderBy(card => card.Index))
+        {
+            var tagsJson = JsonSerializer.Serialize(card.Tags.Select(tag => new { tag.Name, tag.Color }));
+            var checkboxesJson = JsonSerializer.Serialize(card.Checkboxes.Select( checkbox => new { checkbox.Id, checkbox.Finished, checkbox.Name }));
+            var userJson = card.User != null ? JsonSerializer.Serialize(new { card.User.FirstName, card.User.LastName, card.User.Picture }) : "null";
+
+            <div class="task row py-3 px-2 border-3" 
+                style="background-color: #1E1E1E; border-radius: 13px; cursor: pointer; border-bottom: 2px solid #ff0000"
+                data-boardid="@Model.Board.Id"
+                data-id="@card.Id"
+                data-name="@card.Name"
+                data-description="@card.Description"
+                data-startdate="@card.StartDate?.ToString("dd/MM/yyyy")"
+                data-duedate="@card.DueDate?.ToString("dd/MM/yyyy HH:mm")"
+                data-finishedat="@card.FinishedAt?.ToString("dd/MM/yyyy HH:mm")"
+                data-tags='@tagsJson'
+                data-user='@userJson'
+                data-checkboxes='@checkboxesJson'
+                draggable="true">
+                <div class="tags-container d-flex flex-wrap">
+                    @foreach(Tag tag in card.Tags)
+                    {
+                        <span class="badge" style="background-color: @tag.Color;">@tag.Name</span>
+                    }
+                </div>
+                <a class="text-white mb-2" style="font-size: 14px; text-decoration: none; cursor: pointer;">@card.Name</a>
+                @if(card.User != null)
+                {
+                    <div class="d-flex align-content-center pt-2 mb-3 justify-content-between" style="text-wrap: nowrap; overflow: hidden;">
+                        <div class="d-flex align-content-center">
+                            <img class="mx-1" src="@(card.User.Picture ?? Url.Content("~/default-images/default-avatar.jpg"))"
+                            width="30px"
+                            height="30px"
+                            style="border: 2px solid @(Model.UserRolesDictionary[card.User]?.Color ?? "#fff"); border-radius: 50%;">
+                            <p class="px-1 m-0 align-content-center" style="overflow: hidden; text-overflow: ellipsis; color: @(Model.UserRolesDictionary[card.User]?.Color ?? "#fff");">@card.User.FirstName @card.User.LastName</p>
+                        </div>
+                    </div>
+                    @if(card.StartDate != null && card.DueDate != null){
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center justify-content-start" style="background-color: #1a1a1a00; border-radius: 2px; padding: 5px 10px; color: #797979; max-width:140px; max-height:30px;">
+                                    <box-icon name='time-five' color="#797979"></box-icon>
+                                    <span class="px-1" style="font-size: 11px;">@String.Format("{0:dd 'de' MMM} - {1:dd 'de' MMM}", card.StartDate, card.DueDate)</span>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-start" style="max-width: 100px;">
+                                    @{
+                                        int checkedboxes = 0;
+                                        foreach(Checkbox checkbox in card.Checkboxes){
+                                            if(checkbox.Finished){
+                                                checkedboxes += 1;
+                                            }
+                                        }
+                                    }
+                                    <box-icon name='checkbox-checked' color="#797979" ></box-icon>
+                                    <span class="checkbox-count" style="font-size: 12px; color:#797979; width:100%;">
+                                        @checkedboxes/@card.Checkboxes.Count
+                                    </span>
+                                </div>
+                            </div>
+                        }
+                } else
+                {
+                    @if(card.StartDate != null && card.DueDate != null){
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center justify-content-start" style="background-color: #1a1a1a00; border-radius: 2px; padding: 5px 10px; color: #797979; max-width:140px; max-height:30px;">
+                                <box-icon name='time-five' color="#797979"></box-icon>
+                                <span class="px-1" style="font-size: 11px;">@String.Format("{0:dd 'de' MMM} - {1:dd 'de' MMM}", card.StartDate, card.DueDate)</span>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-start" style="max-width: 100px;">
+                                @{
+                                    int checkedboxes = 0;
+                                    foreach(Checkbox checkbox in card.Checkboxes){
+                                        if(checkbox.Finished){
+                                            checkedboxes += 1;
+                                        }
+                                    }
+                                }
+                                <box-icon name='checkbox-checked' color="#797979"></box-icon>
+                                <span class="checkbox-count" style="font-size: 12px; color:#797979; width:100%;">
+                                    @checkedboxes/@card.Checkboxes.Count
+                                </span>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        }
+    </div>
+
+
+
+<div class="swim-lane mx-1 col bg-dark" style="min-width: 350px;" id="QANonApplicable" data-id="@Model.QANonApplicable.Id">
+            
+                <div class="d-flex justify-content-between me-2">
+                    <p style="font-family: Fixture-Expanded-SemiBold; font-size: 1.5rem; margin: 0;">@Model.QANonApplicable.Name</p>
+                    <span class="badge bg-secondary text-white me-2 d-flex justify-content-center align-items-center" style="font-size: 1.2rem; width: auto;">@Model.QANonApplicable.Cards.Count</span>
+                </div>
+            
+            <hr>
+
+        <form class="save-card-order-form" asp-action="SaveCardOrder" asp-controller="Card" method="post" hidden>
+            <input type="text" name="taskIndexDictionary">
+            <input name="id" value="@Model.Board.Id" type="hidden">
+            <input type="hidden" name="IsMemberSideBarActive" class="IsMemberSideBarActiveInput">
+        </form>
+
+        @foreach (Card card in Model.QANonApplicable.Cards.OrderBy(card => card.Index))
+        {
+            var tagsJson = JsonSerializer.Serialize(card.Tags.Select(tag => new { tag.Name, tag.Color }));
+            var checkboxesJson = JsonSerializer.Serialize(card.Checkboxes.Select( checkbox => new { checkbox.Id, checkbox.Finished, checkbox.Name }));
+            var userJson = card.User != null ? JsonSerializer.Serialize(new { card.User.FirstName, card.User.LastName, card.User.Picture }) : "null";
+
+            <div class="task row py-3 px-2 border-3" 
+                style="background-color: #1E1E1E; border-radius: 13px; cursor: pointer; border-bottom: 2px solid #ffde21"
+                data-boardid="@Model.Board.Id"
+                data-id="@card.Id"
+                data-name="@card.Name"
+                data-description="@card.Description"
+                data-startdate="@card.StartDate?.ToString("dd/MM/yyyy")"
+                data-duedate="@card.DueDate?.ToString("dd/MM/yyyy HH:mm")"
+                data-tags='@tagsJson'
+                data-user='@userJson'
+                data-checkboxes='@checkboxesJson'
+                draggable="true">
+                <div class="tags-container d-flex flex-wrap">
+                    @foreach(Tag tag in card.Tags)
+                    {
+                        <span class="badge" style="background-color: @tag.Color;">@tag.Name</span>
+                    }
+                </div>
+                <a class="text-white mb-2" style="font-size: 14px; text-decoration: none; cursor: pointer;">@card.Name</a>
+                @if(card.User != null)
+                {
+                    <div class="d-flex align-content-center pt-2 mb-3 justify-content-between" style="text-wrap: nowrap; overflow: hidden;">
+                        <div class="d-flex align-content-center">
+                            <img class="mx-1" src="@(card.User.Picture ?? Url.Content("~/default-images/default-avatar.jpg"))"
+                            width="30px"
+                            height="30px"
+                            style="border: 2px solid @(Model.UserRolesDictionary[card.User]?.Color ?? "#fff"); border-radius: 50%;">
+                            <p class="px-1 m-0 align-content-center" style="overflow: hidden; text-overflow: ellipsis; color: @(Model.UserRolesDictionary[card.User]?.Color ?? "#fff");">@card.User.FirstName @card.User.LastName</p>
+                        </div>
+                    </div>
+                    @if(card.StartDate != null && card.DueDate != null){
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center justify-content-start" style="background-color: #1a1a1a00; border-radius: 2px; padding: 5px 10px; color: #797979; max-width:140px; max-height:30px;">
+                                    <box-icon name='time-five' color="#797979"></box-icon>
+                                    <span class="px-1" style="font-size: 11px;">@String.Format("{0:dd 'de' MMM} - {1:dd 'de' MMM}", card.StartDate, card.DueDate)</span>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-start" style="max-width: 100px;">
+                                    @{
+                                        int checkedboxes = 0;
+                                        foreach(Checkbox checkbox in card.Checkboxes){
+                                            if(checkbox.Finished){
+                                                checkedboxes += 1;
+                                            }
+                                        }
+                                    }
+                                    <box-icon name='checkbox-checked' color="#797979" ></box-icon>
+                                    <span class="checkbox-count" style="font-size: 12px; color:#797979; width:100%;">
+                                        @checkedboxes/@card.Checkboxes.Count
+                                    </span>
+                                </div>
+                            </div>
+                        }
+                } else
+                {
+                    @if(card.StartDate != null && card.DueDate != null){
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center justify-content-start" style="background-color: #1a1a1a00; border-radius: 2px; padding: 5px 10px; color: #797979; max-width:140px; max-height:30px;">
+                                <box-icon name='time-five' color="#797979"></box-icon>
+                                <span class="px-1" style="font-size: 11px;">@String.Format("{0:dd 'de' MMM} - {1:dd 'de' MMM}", card.StartDate, card.DueDate)</span>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-start" style="max-width: 100px;">
+                                @{
+                                    int checkedboxes = 0;
+                                    foreach(Checkbox checkbox in card.Checkboxes){
+                                        if(checkbox.Finished){
+                                            checkedboxes += 1;
+                                        }
+                                    }
+                                }
+                                <box-icon name='checkbox-checked' color="#797979"></box-icon>
+                                <span class="checkbox-count" style="font-size: 12px; color:#797979; width:100%;">
+                                    @checkedboxes/@card.Checkboxes.Count
+                                </span>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        }
+    </div>
+
+
+</div>
+<style>
+
+    a.text-white {
+        word-wrap: break-word;
+        white-space: normal;
+        display: block;
+    }
+    .board {
+        width: 100%;
+        height: 100%;
+    }
+
+    .lanes {
+        display: flex;
+        align-items: flex-start;
+        justify-content: start;
+        min-width: calc(100% - 250px);
+        overflow-y: auto;
+    }
+
+    .swim-lane {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: #833131;
+        box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.25);
+        padding: 12px;
+        border-radius: 4px;
+        max-width: 300px;
+        min-height: 120px;
+        overflow-x: auto;
+    }
+
+    .task {
+        background: white;
+        color: black;
+        box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.15);
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: move;
+    }
+
+    .is-dragging {
+        scale: 1.05;
+        box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.25);
+        background: rgb(50, 50, 50);
+        color: white;
+    }
+
+    .is-dragging-lane {
+        transform: scale(1.05) rotate(-5deg);
+        box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.25);
+        background: rgb(50, 50, 50);
+        color: white;
+        transition: transform 0.2s ease;
+    }
+</style>

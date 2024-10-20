@@ -37,7 +37,6 @@ public class BoardController : Controller
                     .ThenInclude(c => c.Checkboxes)
             .SingleOrDefaultAsync(u => u.Id == id);
 
-
         if (board == null)
         {
             return NotFound();
@@ -49,7 +48,8 @@ public class BoardController : Controller
             .Include(b => b.Boards)
             .SingleOrDefaultAsync(p => p.Id == projectId);
 
-        if(!project.IsActive) {
+        if (!project.IsActive)
+        {
             return NotFound();
         }
 
@@ -64,7 +64,8 @@ public class BoardController : Controller
             .Include(u => u.Projects)
             .FirstOrDefault(u => u.Id == currentUser.Id);
 
-        if (!user.Projects.Contains(board.Project)){
+        if (!user.Projects.Contains(board.Project))
+        {
             return Forbid();
         }
         // Retrieve the user's role within the project associated with the board
@@ -83,8 +84,9 @@ public class BoardController : Controller
             .Include(r => r.Users)
             .Where(r => r.Project.Id == projectId)
             .ToListAsync();
-        foreach (Role role in roles) {
-            if(role.CanManageRoles)
+        foreach (Role role in roles)
+        {
+            if (role.CanManageRoles)
             {
                 canManageRoles.Add(role);
             }
@@ -99,30 +101,64 @@ public class BoardController : Controller
         }
 
         List<Board> userBoards = [];
-        foreach (var userBoard in project.Boards) {
+        foreach (var userBoard in project.Boards)
+        {
             userBoards.Add(userBoard);
         }
 
-        var model = new BoardVM
+        if (board.IsQualityAssuranceType)
         {
-            User = user,
-            UserBoards = userBoards,
-            Board = board,
-            ProjectRoles = roles,
-            UserRole = userRole,
-            ProjectResponsibleUser = responsibleUser,
-            Members = members,
-            UserRolesDictionary = userRoles, // Add the dictionary to the model
-            CanManageRoles = canManageRoles,
-            IsMemberSideBarActive = IsMemberSideBarActive,
-            Tags = (List<Tag>)board.Tags
-        };
+            var model = new BoardVM
+            {
+                IsQualityAssuranceType = board.IsQualityAssuranceType,
+                QAChecklist = _db.Lanes.FirstOrDefault(l => l.Id == board.QAChecklist),
+                QAConformities = _db.Lanes.FirstOrDefault(l => l.Id == board.QAConformities),
+                QAUnconformities = _db.Lanes.FirstOrDefault(l => l.Id == board.QAUnconformities),
+                QANonApplicable = _db.Lanes.FirstOrDefault(l => l.Id == board.QANonApplicable),
+                User = user,
+                UserBoards = userBoards,
+                Board = board,
+                ProjectRoles = roles,
+                UserRole = userRole,
+                ProjectResponsibleUser = responsibleUser,
+                Members = members,
+                UserRolesDictionary = userRoles,
+                CanManageRoles = canManageRoles,
+                IsMemberSideBarActive = IsMemberSideBarActive,
+                Tags = (List<Tag>)board.Tags
+            };
+            return View(model);
+        }
+        else
+        {
+            var model = new BoardVM
+            {
+                IsQualityAssuranceType = board.IsQualityAssuranceType,
+                QAChecklist = _db.Lanes.FirstOrDefault(l => l.Id == board.QAChecklist),
+                QAConformities = _db.Lanes.FirstOrDefault(l => l.Id == board.QAConformities),
+                QAUnconformities = _db.Lanes.FirstOrDefault(l => l.Id == board.QAUnconformities),
+                QANonApplicable = _db.Lanes.FirstOrDefault(l => l.Id == board.QANonApplicable),
+                User = user,
+                UserBoards = userBoards,
+                Board = board,
+                ProjectRoles = roles,
+                UserRole = userRole,
+                ProjectResponsibleUser = responsibleUser,
+                Members = members,
+                UserRolesDictionary = userRoles,
+                CanManageRoles = canManageRoles,
+                IsMemberSideBarActive = IsMemberSideBarActive,
+                Tags = (List<Tag>)board.Tags
+            };
+            return View(model);
+        }
 
-        return View(model);
+
     }
     public async Task<IActionResult> GetProjectBoards(int id)
     {
-        try {
+        try
+        {
             Project project = _db.Projects
                 .Include(p => p.Boards)
                 .Include(p => p.Users)
@@ -147,7 +183,7 @@ public class BoardController : Controller
 
             return View(project);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             return NotFound();
         }
@@ -162,12 +198,12 @@ public class BoardController : Controller
         ViewData["project"] = project;
         ViewData["projectName"] = project.Name;
         ViewData["projectId"] = project.Id;
-        
+
         return View();
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateBoard(Board Board, IFormFile BoardImg, int projectId)
+    public async Task<IActionResult> CreateBoard(Board Board, IFormFile BoardImg, int projectId, bool IsQualityAssuranceType)
     {
         Board.CreationDate = DateOnly.FromDateTime(DateTime.UtcNow);
         Board.IsActive = true;
@@ -193,29 +229,88 @@ public class BoardController : Controller
         _db.Boards.Add(Board);
         await _db.SaveChangesAsync();
 
-        var BacklogLane = new Lane
+        if (IsQualityAssuranceType)
         {
-            Name = "BackLog",
-            Board = Board,
-            Index = 0,
-        };
-        var ToDoLane = new Lane
+            var BacklogLane = new Lane
+            {
+                Name = "Checklist",
+                Board = Board,
+                Index = 0,
+            };
+            var ToDoLane = new Lane
+            {
+                Name = "Conformes",
+                Board = Board,
+                Index = 1,
+            };
+            var DoneLane = new Lane
+            {
+                Name = "Não Conformes",
+                Board = Board,
+                Index = 2,
+            };
+
+            var NonApplicableLane = new Lane
+            {
+                Name = "Não Aplicáveis",
+                Board = Board,
+                Index = 2,
+            };
+
+
+            Board.Lanes.Add(BacklogLane);
+            Board.Lanes.Add(ToDoLane);
+            Board.Lanes.Add(DoneLane);
+            Board.Lanes.Add(NonApplicableLane);
+
+            await _db.SaveChangesAsync();
+            Board.QAChecklist = BacklogLane.Id;
+            Board.QAConformities = ToDoLane.Id;
+            Board.QAUnconformities = DoneLane.Id;
+            Board.QANonApplicable = NonApplicableLane.Id;
+
+        }
+        else
         {
-            Name = "To Do",
-            Board = Board,
-            Index = 1,
-        };
-        var DoneLane = new Lane
-        {
-            Name = "Done",
-            Board = Board,
-            Index = 2,
-        };
-        Board.Lanes.Add(BacklogLane);
-        Board.Lanes.Add(ToDoLane);
-        Board.Lanes.Add(DoneLane);
-        await _db.SaveChangesAsync();
+            var BacklogLane = new Lane
+            {
+                Name = "Backlog",
+                Board = Board,
+                Index = 0,
+            };
+            var ToDoLane = new Lane
+            {
+                Name = "To Do",
+                Board = Board,
+                Index = 1,
+            };
+            var DoingLane = new Lane
+            {
+                Name = "Doing",
+                Board = Board,
+                Index = 2,
+            };
+            var DoneLane = new Lane
+            {
+                Name = "Done",
+                Board = Board,
+                Index = 3,
+            };
+            Board.Lanes.Add(BacklogLane);
+            Board.Lanes.Add(ToDoLane);
+            Board.Lanes.Add(DoingLane);
+            Board.Lanes.Add(DoneLane);
+
+            await _db.SaveChangesAsync();
+            Board.QAChecklist = BacklogLane.Id;
+            Board.QAConformities = ToDoLane.Id;
+            Board.QAUnconformities = DoingLane.Id;
+            Board.QANonApplicable = DoneLane.Id;
+
+        }
+
         // Board.Background = "../board-pictures/defaultBackground.jpg";
+        await _db.SaveChangesAsync();
         if (ModelState.IsValid)
         {
             var project = await _db.Projects
